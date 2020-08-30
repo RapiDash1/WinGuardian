@@ -18,14 +18,25 @@ public class Steganography {
 	private int bitsInByte = 8;
 	
 	
+	/**
+	 * Save Password
+	 * @param key
+	 * @param password
+	 * @return true if password was successfully saved
+	 */
 	public boolean savePassword(String key, String password) {
 		if (downloadImage(key)) {
-			writePasswordToImage(key, password);	
+			return writePasswordToImage(key, password);	
 		}
 		return false;
 	}
 	
 	
+	/**
+	 * Donwload Image
+	 * @param key
+	 * @return true if image was successfully downloaded
+	 */
 	public boolean downloadImage(String key) {
 		try {
 			URL imageUrl = new URL("https://source.unsplash.com/random");
@@ -49,6 +60,12 @@ public class Steganography {
 	}
 	
 	
+	/**
+	 * Write Password To Image
+	 * @param key
+	 * @param password
+	 * @return true if password was successfully written to image
+	 */
 	public boolean writePasswordToImage(String key, String password) {
 		BufferedImage stegImage = getImage(key);
 		try {
@@ -91,7 +108,11 @@ public class Steganography {
 	}
 	
 	
-	public String showPassword(String key) {
+	/**
+	 * Show Password
+	 * @param key
+	 */
+	public void showPassword(String key) {
 		BufferedImage stegImage = getImage(key);
 		try {
 			int length = 0;
@@ -119,17 +140,20 @@ public class Steganography {
 			try {
 				String passwordStr = new String(password, "UTF-8");
 				System.out.println("Password: " + passwordStr);
-				 return passwordStr;
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			} 
 		} catch (NullPointerException e) {
 			// No file found
 		}
-		return "Password is not retrievable.";
 	}
 	
 	
+	/**
+	 * Get Image
+	 * @param key
+	 * @return returns a BufferedImage with saved with name '{key}'
+	 */
 	private BufferedImage getImage(String key) {
 		File imageFile = getImageFile(key);
 		try {
@@ -141,6 +165,12 @@ public class Steganography {
 	}
 	
 	
+	/**
+	 * Save Image
+	 * @param image
+	 * @param key
+	 * Saves image with the name '{key}'
+	 */
 	private void saveImage(BufferedImage image, String key) {
 		File imageFile = getImageFile(key);
 		try {
@@ -151,6 +181,11 @@ public class Steganography {
 	}
 	
 	
+	/**
+	 * Get Image File
+	 * @param key
+	 * @return returns a file object with the specifies key
+	 */
 	private File getImageFile(String key) {
 		return new File("C:\\Users\\Srivatsa\\Desktop\\" + key + ".jpg");
 	}

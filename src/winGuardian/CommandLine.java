@@ -5,12 +5,19 @@ import java.io.Console;
 public class CommandLine {
 	
 	
+	/**
+	 * Constructor
+	 */
 	public CommandLine() {
 		checkMasterPassword();
 		chooseOption();
 	}
 	
 	
+	/**
+	 * Choose Option
+	 * Choose either get or save password
+	 */
 	public void chooseOption() {
 		Console c = System.console();
 		System.err.println("Choose an option: ");
@@ -41,6 +48,10 @@ public class CommandLine {
 	}
 	
 	
+	/**
+	 * Check Master Password
+	 * @return true when correct password is entered
+	 */
 	public boolean checkMasterPassword() {
 		boolean masterPasswordVerified = verifyMasterPassword();
 		while (!masterPasswordVerified) {
@@ -53,7 +64,11 @@ public class CommandLine {
 	}
 	
 	
-	public boolean verifyMasterPassword() {
+	/**
+	 * Verify Master Password
+	 * @return true if entered and actual password are equal
+	 */
+	private boolean verifyMasterPassword() {
 		String actualPassword = "Hi";
 		System.out.println("Hi, hope you are having a good day.");
 		Console c = System.console();
@@ -72,6 +87,9 @@ public class CommandLine {
 	} 
 	
 	
+	/**
+	 * Save Password
+	 */
 	public void savePassword() {
 		Console c = System.console();
 		String key = c.readLine("Enter key: ");
@@ -82,6 +100,9 @@ public class CommandLine {
 	}
 	
 	
+	/**
+	 * Get Password
+	 */
 	public void getPassword() {
 		Console c = System.console();
 		String key = c.readLine("Enter key to reveal password: ");
