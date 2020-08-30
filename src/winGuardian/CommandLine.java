@@ -1,6 +1,9 @@
 package winGuardian;
 
 import java.io.Console;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class CommandLine {
 	
@@ -69,7 +72,6 @@ public class CommandLine {
 	 * @return true if entered and actual password are equal
 	 */
 	private boolean verifyMasterPassword() {
-		String actualPassword = "Hi";
 		System.out.println("Hi, hope you are having a good day.");
 		Console c = System.console();
 		if (c == null) {
@@ -81,7 +83,17 @@ public class CommandLine {
 			System.out.println("");
 			System.out.println("***You are logged in***");
 			System.out.println("");
-			return enteredPassword.equals(actualPassword);
+			Properties prop = new Properties();
+			try {
+				ClassLoader loader = Thread.currentThread().getContextClassLoader();           
+				InputStream stream = loader.getResourceAsStream("credentials.properties");
+				prop.load(stream);	
+				return enteredPassword.equals(prop.getProperty("password"));
+
+			} 
+			catch (IOException ex) {
+			    ex.printStackTrace();
+			}
 		}
 		return false;
 	} 
