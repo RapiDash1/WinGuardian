@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+
 import javax.imageio.ImageIO;
 
 public class Steganography {
@@ -20,7 +21,6 @@ public class Steganography {
 	public boolean savePassword(String key, String password) {
 		if (downloadImage(key)) {
 			writePasswordToImage(key, password);	
-			showPassword(key);
 		}
 		return false;
 	}
@@ -51,38 +51,41 @@ public class Steganography {
 	
 	public boolean writePasswordToImage(String key, String password) {
 		BufferedImage stegImage = getImage(key);
-		byte[] stringBytes = password.getBytes();
-		System.out.println(stringBytes);
-		int imageBytesLen = stegImage.getHeight()*stegImage.getWidth();
-		int stringBytesLen = stringBytes.length;
-		if (stringBytesLen*bitsInByte + noOfBytesAllotedToPasswordLength > imageBytesLen) {
-			System.err.println("Image is small to hide entire phrase");
-			return false;
-		} else {
-			System.out.println(stringBytesLen);
-			for (int x=0; x<32; x++) {
-				int rgbVal = stegImage.getRGB(x, 0);
-				rgbVal = ((rgbVal & ~1) | (stringBytesLen & 1)); 
-				stegImage.setRGB(x, 0, rgbVal);
-				stringBytesLen = stringBytesLen >> 1;
-			}
-			int x = 32;
-			int y = 0;
-			for (int index=0; index<stringBytes.length; index++) {
-				for (int bitPos=0;bitPos<8; bitPos++) {
-					int rgbVal = stegImage.getRGB(x, y);
-					rgbVal = ((rgbVal & ~1) | (stringBytes[index] & 1)); 
-					stegImage.setRGB(x, y, rgbVal);
-					stringBytes[index] = (byte) (stringBytes[index] >> 1);
-					x += 1;
-					if (x == stegImage.getWidth()) {
-						x = 0;
-						y += 1;
+		try {
+			byte[] stringBytes = password.getBytes();
+			int imageBytesLen = stegImage.getHeight()*stegImage.getWidth();
+			int stringBytesLen = stringBytes.length;
+			if (stringBytesLen*bitsInByte + noOfBytesAllotedToPasswordLength > imageBytesLen) {
+				System.err.println("Image is small to hide entire phrase");
+				return false;
+			} else {
+				for (int x=0; x<32; x++) {
+					int rgbVal = stegImage.getRGB(x, 0);
+					rgbVal = ((rgbVal & ~1) | (stringBytesLen & 1)); 
+					stegImage.setRGB(x, 0, rgbVal);
+					stringBytesLen = stringBytesLen >> 1;
+				}
+				int x = 32;
+				int y = 0;
+				for (int index=0; index<stringBytes.length; index++) {
+					for (int bitPos=0;bitPos<8; bitPos++) {
+						int rgbVal = stegImage.getRGB(x, y);
+						rgbVal = ((rgbVal & ~1) | (stringBytes[index] & 1)); 
+						stegImage.setRGB(x, y, rgbVal);
+						stringBytes[index] = (byte) (stringBytes[index] >>> 1);
+						x += 1;
+						if (x == stegImage.getWidth()) {
+							x = 0;
+							y += 1;
+						}
 					}
 				}
+				saveImage(stegImage, key);	
+				System.out.println("New password was created for: " + key);
+				return true;
 			}
-			saveImage(stegImage, key);
-			
+		} catch (NullPointerException e) {
+			// No file found
 		}
 		return false;
 	}
@@ -90,39 +93,40 @@ public class Steganography {
 	
 	public String showPassword(String key) {
 		BufferedImage stegImage = getImage(key);
-		int length = 0;
-		for (int x=31; x>=0; --x) {
-			length = length << 1;
-			int rgbVal = stegImage.getRGB(x, 0);
-			length = (length | (rgbVal & 1)); 
-		}
-		System.out.println(length);
-		byte[] password = new byte[length];
-		int x = 32;
-		int y = 0;
-		for (int index=0; index<length; index++) {
-			int passwordByte =  0;
-			for (int bitPos=0;bitPos<8; bitPos++) {
-				int rgbVal = stegImage.getRGB(x, y);
-				passwordByte = (passwordByte | (rgbVal & 1)); 
-				passwordByte = (passwordByte << 1);
-				x += 1;
-				if (x == stegImage.getWidth()) {
-					x = 0;
-					y += 1;
-				}	
-			}
-			System.out.println(passwordByte);
-			password[index] = (byte) passwordByte;
-		}
-		String str;
 		try {
-			str = new String(password, "UTF-8");
-			System.out.println(str);
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} 
-		return "Password is not retrievable";
+			int length = 0;
+			for (int x=31; x>=0; --x) {
+				length = length << 1;
+				int rgbVal = stegImage.getRGB(x, 0);
+				length = (length | (rgbVal & 1)); 
+			}
+			byte[] password = new byte[length];
+			int x = 32;
+			int y = 0;
+			for (int index=0; index<length; index++) {
+				int passwordByte =  0;
+				for (int bitPos=0;bitPos<8; bitPos++) {
+					int rgbVal = stegImage.getRGB(x, y);
+					passwordByte = (passwordByte | ((rgbVal & 1) << bitPos));
+					x += 1;
+					if (x == stegImage.getWidth()) {
+						x = 0;
+						y += 1;
+					}	
+				}
+				password[index] = (byte) passwordByte;
+			}
+			try {
+				String passwordStr = new String(password, "UTF-8");
+				System.out.println("Password: " + passwordStr);
+				 return passwordStr;
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} 
+		} catch (NullPointerException e) {
+			// No file found
+		}
+		return "Password is not retrievable.";
 	}
 	
 	
@@ -131,7 +135,7 @@ public class Steganography {
 		try {
 			return ImageIO.read(imageFile);
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("This key has not been saved. Please save it before accessing it.");
 		}
 		return null;
 	}
@@ -142,7 +146,7 @@ public class Steganography {
 		try {
 			ImageIO.write(image, "png", imageFile);	
 		} catch (IOException e) {
-			
+			System.out.println("No such file to save password. Please try again.");
 		}
 	}
 	
