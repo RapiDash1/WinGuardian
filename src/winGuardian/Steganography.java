@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.Properties;
 
 import javax.imageio.ImageIO;
 
@@ -16,6 +17,21 @@ public class Steganography {
 	
 	private int noOfBytesAllotedToPasswordLength = 32;
 	private int bitsInByte = 8;
+	private String pngExtension = ".png";
+
+	public String imagePath() {
+		Properties prop = new Properties();
+		try {
+			ClassLoader loader = Thread.currentThread().getContextClassLoader();           
+			InputStream stream = loader.getResourceAsStream("credentials.properties");
+			prop.load(stream);	
+			return prop.getProperty("imagePath");
+		} 
+		catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return null;
+	}
 	
 	
 	/**
@@ -41,7 +57,7 @@ public class Steganography {
 		try {
 			URL imageUrl = new URL("https://source.unsplash.com/random");
 			InputStream inpStream = imageUrl.openStream();
-			OutputStream optStream = new FileOutputStream("C:\\Users\\Srivatsa\\Desktop\\" + key + ".jpg");
+			OutputStream optStream = new FileOutputStream(imagePath() + key + pngExtension);
 			
 			byte[] b = new byte[2048];
 			int length;
@@ -174,7 +190,7 @@ public class Steganography {
 	private void saveImage(BufferedImage image, String key) {
 		File imageFile = getImageFile(key);
 		try {
-			ImageIO.write(image, "png", imageFile);	
+			ImageIO.write(image, pngExtension.substring(1), imageFile);	
 		} catch (IOException e) {
 			System.out.println("No such file to save password. Please try again.");
 		}
@@ -187,7 +203,7 @@ public class Steganography {
 	 * @return returns a file object with the specifies key
 	 */
 	private File getImageFile(String key) {
-		return new File("C:\\Users\\Srivatsa\\Desktop\\" + key + ".jpg");
+		return new File(imagePath() + key + pngExtension);
 	}
 	
 }
